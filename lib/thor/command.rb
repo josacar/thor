@@ -1,9 +1,9 @@
 class Thor
-  class Command < Struct.new(:name, :description, :long_description, :usage, :options, :ancestor_name)
+  class Command < Struct.new(:name, :description, :long_description, :usage, :options, :deps, :ancestor_name)
     FILE_REGEXP = /^#{Regexp.escape(File.dirname(__FILE__))}/
 
-    def initialize(name, description, long_description, usage, options = nil)
-      super(name.to_s, description, long_description, usage, options || {})
+    def initialize(name, description, long_description, usage, options = nil, deps = nil)
+      super(name.to_s, description, long_description, usage, options || {}, deps)
     end
 
     def initialize_copy(other) #:nodoc:
@@ -23,6 +23,7 @@ class Thor
       if private_method?(instance)
         instance.class.handle_no_command_error(name)
       elsif public_method?(instance)
+        deps.call if deps
         arity = instance.method(name).arity
         instance.__send__(name, *args)
       elsif local_method?(instance, :method_missing)

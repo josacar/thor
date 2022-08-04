@@ -231,6 +231,10 @@ class Thor
       @subcommand_classes ||= {}
     end
 
+    def deps(&block)
+      @deps = block
+    end
+
     def subcommand(subcommand, subcommand_class)
       subcommands << subcommand.to_s
       subcommand_class.subcommand_help subcommand
@@ -242,6 +246,7 @@ class Thor
         invoke_args.unshift "help" if opts.delete("--help") || opts.delete("-h")
         invoke subcommand_class, *invoke_args
       end
+
       subcommand_class.commands.each do |_meth, command|
         command.ancestor_name = subcommand
       end
@@ -416,10 +421,12 @@ class Thor
       @desc ||= nil
       @long_desc ||= nil
       @hide ||= nil
+      @deps ||= nil
 
       if @usage && @desc
         base_class = @hide ? Thor::HiddenCommand : Thor::Command
-        commands[meth] = base_class.new(meth, @desc, @long_desc, @usage, method_options)
+        deps = meth == "help" ? nil : @deps
+        commands[meth] = base_class.new(meth, @desc, @long_desc, @usage, method_options, deps)
         @usage, @desc, @long_desc, @method_options, @hide = nil
         true
       elsif all_commands[meth] || meth == "method_missing"
